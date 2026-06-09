@@ -1,0 +1,26 @@
+body{
+    background-color:#f4f6f9;
+
+}
+.sidebar{
+    background-color:#1e293b;
+    min-height:100vh;
+    color:white;
+}
+
+.sidebar .nav-link{
+    color:white;
+    padding:12px;
+}
+
+.sidebar .nav-link:hover{
+    background:#334155;
+    border-radius:8px;
+}
+.card{
+    transition:0.3s;
+}
+
+.card:hover{
+    transform:translateY(-5px);
+}
