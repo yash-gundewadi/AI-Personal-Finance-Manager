@@ -1,26 +1,672 @@
-body{
-    background-color:#f4f6f9;
+/* ==========================================
+   GLOBAL
+========================================== */
 
+:root{
+    --primary:#2563eb;
+    --primary-dark:#1d4ed8;
+
+    --success:#22c55e;
+    --danger:#ef4444;
+    --warning:#f59e0b;
+
+    --bg:#f4f7fb;
+    --card:#ffffff;
+
+    --sidebar:#0f172a;
+    --sidebar-light:#1e293b;
+
+    --text:#0f172a;
+    --muted:#64748b;
 }
-.sidebar{
-    background-color:#1e293b;
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:var(--bg);
+    font-family:'Segoe UI',sans-serif;
+    color:var(--text);
+}
+
+a{
+    text-decoration:none;
+}
+
+ul{
+    list-style:none;
+}
+
+/* ==========================================
+   APP LAYOUT
+========================================== */
+
+.app-shell{
     min-height:100vh;
+    display:flex;
+}
+
+/* ==========================================
+   SIDEBAR
+========================================== */
+
+.sidebar{
+
+    width:280px;
+    min-height:100vh;
+
+    background:linear-gradient(
+        180deg,
+        var(--sidebar),
+        var(--sidebar-light)
+    );
+
     color:white;
+
+    padding:25px;
+
+    position:sticky;
+    top:0;
+
+    box-shadow:
+    10px 0 25px rgba(0,0,0,.08);
+}
+
+.sidebar-brand{
+
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+    padding-bottom:20px;
+
+    border-bottom:
+    1px solid rgba(255,255,255,.08);
+}
+
+.brand-mark{
+
+    width:50px;
+    height:50px;
+
+    border-radius:12px;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    background:rgba(255,255,255,.1);
+
+    font-size:22px;
+}
+
+.logo{
+    font-size:22px;
+    font-weight:700;
+}
+
+.sidebar small{
+    color:#cbd5e1;
+}
+
+/* Navigation */
+
+.sidebar-nav{
+    margin-top:20px;
 }
 
 .sidebar .nav-link{
+
     color:white;
-    padding:12px;
+
+    padding:14px 16px;
+
+    border-radius:12px;
+
+    margin-bottom:8px;
+
+    transition:.3s;
+
+    display:flex;
+    align-items:center;
+
+    gap:10px;
+
+    font-weight:500;
 }
 
 .sidebar .nav-link:hover{
-    background:#334155;
-    border-radius:8px;
+
+    background:rgba(255,255,255,.08);
+
+    transform:translateX(5px);
 }
+
+.sidebar .nav-link.active{
+
+    background:var(--primary);
+
+    box-shadow:
+    0 10px 25px rgba(37,99,235,.3);
+}
+
+/* Sidebar Footer */
+
+.sidebar-footer{
+
+    margin-top:40px;
+
+    padding:18px;
+
+    border-radius:15px;
+
+    background:
+    rgba(255,255,255,.08);
+}
+
+.sidebar-footer p{
+
+    color:#cbd5e1;
+
+    font-size:12px;
+
+    text-transform:uppercase;
+}
+
+.sidebar-footer h3{
+    font-size:22px;
+    margin-bottom:5px;
+}
+
+/* ==========================================
+   MAIN CONTENT
+========================================== */
+
+.main-content{
+
+    flex:1;
+
+    padding:25px;
+}
+
+/* ==========================================
+   TOPBAR
+========================================== */
+
+.topbar{
+
+    background:white;
+
+    border-radius:20px;
+
+    padding:18px 24px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:25px;
+
+    box-shadow:
+    0 8px 25px rgba(0,0,0,.05);
+}
+
+.section-eyebrow{
+
+    font-size:12px;
+
+    text-transform:uppercase;
+
+    color:var(--primary);
+
+    letter-spacing:2px;
+
+    font-weight:700;
+}
+
+.dashboard-title{
+
+    font-size:30px;
+
+    font-weight:700;
+}
+
+.topbar-actions{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+}
+
+/* ==========================================
+   USER CHIP
+========================================== */
+
+.user-chip{
+
+    background:#f8fafc;
+
+    border:none;
+
+    border-radius:12px;
+
+    padding:10px 14px;
+
+    font-weight:600;
+}
+
+.user-chip:hover{
+    background:#eef2ff;
+}
+
+.avatar-circle{
+
+    width:35px;
+    height:35px;
+
+    border-radius:50%;
+
+    background:var(--primary);
+
+    color:white;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-weight:700;
+}
+
+/* ==========================================
+   NOTIFICATIONS
+========================================== */
+
+.notification-wrapper{
+    position:relative;
+}
+
+.notification-badge{
+
+    position:absolute;
+
+    top:-5px;
+    right:-5px;
+
+    width:18px;
+    height:18px;
+
+    border-radius:50%;
+
+    background:var(--danger);
+
+    color:white;
+
+    font-size:10px;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+/* ==========================================
+   HERO CARD
+========================================== */
+
+.hero-card{
+
+    border:none;
+
+    border-radius:20px;
+
+    background:
+    linear-gradient(
+        135deg,
+        rgba(37,99,235,.08),
+        rgba(14,165,233,.05)
+    );
+}
+
+.hero-badge{
+
+    background:var(--sidebar);
+
+    color:white;
+
+    padding:12px 18px;
+
+    border-radius:30px;
+
+    font-weight:600;
+}
+
+/* ==========================================
+   CARDS
+========================================== */
+
 .card{
-    transition:0.3s;
+
+    border:none;
+
+    border-radius:20px;
+
+    transition:.3s;
 }
 
 .card:hover{
+
     transform:translateY(-5px);
+
+    box-shadow:
+    0 15px 35px rgba(0,0,0,.08);
+}
+
+.card-body{
+    padding:22px;
+}
+
+.card-body h5{
+    margin-bottom:12px;
+}
+
+.card-body h2{
+    font-weight:700;
+}
+
+/* KPI Cards */
+
+.income-card{
+    border-left:5px solid var(--success);
+}
+
+.expense-card{
+    border-left:5px solid var(--danger);
+}
+
+.savings-card{
+    border-left:5px solid var(--primary);
+}
+
+.budget-card{
+    border-left:5px solid var(--warning);
+}
+
+/* ==========================================
+   BUTTONS
+========================================== */
+
+.action-btn{
+
+    height:52px;
+
+    border:none;
+
+    border-radius:15px;
+
+    font-weight:600;
+
+    color:white;
+
+    transition:.3s;
+}
+
+.action-btn:hover{
+    transform:translateY(-2px);
+}
+
+.action-income{
+    background:var(--primary);
+}
+
+.action-expense{
+    background:var(--danger);
+}
+
+.action-goal{
+    background:var(--success);
+}
+
+.action-report{
+    background:var(--warning);
+    color:#111827;
+}
+
+/* ==========================================
+   CHART SECTION
+========================================== */
+
+.chart-placeholder{
+
+    min-height:280px;
+
+    border-radius:16px;
+
+    border:2px dashed #cbd5e1;
+
+    display:flex;
+
+    justify-content:center;
+    align-items:center;
+
+    color:var(--muted);
+
+    font-weight:600;
+
+    background:#fafafa;
+}
+
+/* ==========================================
+   RECENT ACTIVITY
+========================================== */
+
+.list-group-item{
+
+    border:none;
+
+    border-bottom:
+    1px solid #e5e7eb;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+}
+
+.list-group-item:last-child{
+    border-bottom:none;
+}
+
+/* ==========================================
+   DROPDOWN
+========================================== */
+
+.dropdown-menu{
+
+    border:none;
+
+    border-radius:14px;
+
+    box-shadow:
+    0 10px 25px rgba(0,0,0,.08);
+}
+
+.dropdown-item{
+    padding:12px 15px;
+}
+
+.dropdown-item:hover{
+    background:#f8fafc;
+}
+
+/* ==========================================
+   LOGIN / REGISTER
+========================================== */
+
+.login-body{
+
+    background:
+    linear-gradient(
+        135deg,
+        #0f172a,
+        #2563eb
+    );
+
+    min-height:100vh;
+}
+
+.login-card{
+
+    background:
+    rgba(255,255,255,.96);
+
+    backdrop-filter:blur(12px);
+
+    border-radius:24px;
+
+    padding:40px;
+
+    border:none;
+}
+
+.finance-logo{
+
+    color:var(--primary);
+
+    font-weight:700;
+}
+
+.login-logo-circle{
+
+    width:80px;
+    height:80px;
+
+    border-radius:50%;
+
+    margin:auto;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:
+    linear-gradient(
+        135deg,
+        var(--primary),
+        var(--primary-dark)
+    );
+
+    color:white;
+
+    font-size:32px;
+
+    box-shadow:
+    0 10px 25px rgba(37,99,235,.35);
+}
+
+.login-card .form-control{
+
+    height:50px;
+
+    border-radius:12px;
+}
+
+.login-card .btn-primary{
+
+    border-radius:12px;
+
+    height:50px;
+
+    font-weight:600;
+}
+
+/* ==========================================
+   FLOATING BUTTON
+========================================== */
+
+.fab{
+
+    position:fixed;
+
+    bottom:30px;
+    right:30px;
+
+    width:60px;
+    height:60px;
+
+    border-radius:50%;
+
+    background:var(--primary);
+
+    color:white;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    font-size:24px;
+
+    box-shadow:
+    0 15px 30px rgba(37,99,235,.3);
+
+    z-index:999;
+}
+
+.fab:hover{
+    color:white;
+}
+
+/* ==========================================
+   FOOTER
+========================================== */
+
+footer{
+
+    margin-top:40px;
+
+    color:var(--muted);
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media(max-width:768px){
+
+    .app-shell{
+        flex-direction:column;
+    }
+
+    .sidebar{
+
+        width:100%;
+
+        min-height:auto;
+
+        position:relative;
+    }
+
+    .main-content{
+        padding:15px;
+    }
+
+    .topbar{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+        gap:15px;
+    }
+
+    .dashboard-title{
+        font-size:24px;
+    }
 }
