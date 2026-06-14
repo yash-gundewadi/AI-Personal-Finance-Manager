@@ -1,1 +1,64 @@
-<h1>Income Page</h1>
+<h2>Add Income</h2>
+
+<form method="POST">
+
+    <input
+        type="text"
+        name="source"
+        placeholder="Income Source">
+
+    <input
+        type="number"
+        name="amount"
+        placeholder="Amount">
+
+    <button type="submit">
+
+        Save Income
+
+    </button>
+
+</form>
+
+<table>
+
+<tr>
+    <th>Source</th>
+    <th>Amount</th>
+    <th>Date</th>
+    <th>Action</th>
+</tr>
+
+    {% for income in incomes %}
+
+<tr>
+
+    <td>
+        {{ income.source }}
+    </td>
+
+    <td>
+        ₹{{ income.amount }}
+    </td>
+
+    <td>
+        {{ income.date.strftime('%d-%m-%Y') }}
+    </td>
+
+    <td>
+
+        <a href="/delete-income/{{ income.id }}"
+           class="btn btn-danger btn-sm"
+           onclick="return confirm('Delete this income?')">
+
+            Delete
+
+        </a>
+
+    </td>
+
+</tr>
+
+{% endfor %}
+
+</table>

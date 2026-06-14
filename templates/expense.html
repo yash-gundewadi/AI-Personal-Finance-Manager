@@ -1,0 +1,64 @@
+<h2>Add Expense</h2>
+
+<form method="POST">
+
+    <input
+        type="text"
+        name="category"
+        placeholder="Expense Category">
+
+    <input
+        type="number"
+        name="amount"
+        placeholder="Amount">
+
+    <button type="submit">
+
+        Save Expense
+
+    </button>
+
+</form>
+
+<table>
+
+<tr>
+    <th>Category</th>
+    <th>Amount</th>
+    <th>Date</th>
+    <th>Action</th>
+</tr>
+
+    {% for expense in expenses %}
+
+<tr>
+
+    <td>
+        {{ expense.category }}
+    </td>
+
+    <td>
+        ₹{{ expense.amount }}
+    </td>
+
+    <td>
+        {{ expense.date.strftime('%d-%m-%Y') }}
+    </td>
+
+    <td>
+
+        <a href="/delete-expense/{{ expense.id }}"
+           class="btn btn-danger btn-sm"
+           onclick="return confirm('Delete this expense?')">
+
+            Delete
+
+        </a>
+
+    </td>
+
+</tr>
+
+{% endfor %}
+
+</table>

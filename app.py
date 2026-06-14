@@ -6,7 +6,7 @@ from flask import (
     url_for,
     flash
 )
-
+from sqlalchemy import func
 from flask_sqlalchemy import SQLAlchemy
 
 from werkzeug.security import (
@@ -22,6 +22,8 @@ from flask_login import (
     logout_user,
     current_user
 )
+
+from datetime import datetime
 
 # ==================================
 # APP CONFIGURATION
@@ -78,6 +80,79 @@ class User(UserMixin, db.Model):
         nullable=False
     )
 
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
+    incomes = db.relationship(
+        'Income',
+        backref='user',
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
+
+    expenses = db.relationship(
+        'Expense',
+        backref='user',
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
+
+class Income(db.Model):
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    amount = db.Column(
+        db.Float,
+        nullable=False
+    )
+
+    source = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    date = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id')
+    )
+
+class Expense(db.Model):
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    amount = db.Column(
+        db.Float,
+        nullable=False
+    )
+
+    category = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    date = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id')
+    )
+
 # ==================================
 # TRANSACTION MODEL
 # (For Day 4 Dashboard Integration)
@@ -124,12 +199,35 @@ def load_user(user_id):
 @login_required
 def home():
 
-    income_total = 50000
-    expense_total = 20000
+    income_total = db.session.query(
+        func.sum(Income.amount)
+    ).filter_by(
+        user_id=current_user.id
+    ).scalar() or 0
+
+    expense_total = db.session.query(
+        func.sum(Expense.amount)
+    ).filter_by(
+        user_id=current_user.id
+    ).scalar() or 0
 
     savings = income_total - expense_total
 
-    budget_percent = 80
+    budget_percent = int(
+        (expense_total / income_total) * 100
+    ) if income_total > 0 else 0
+
+    recent_income = Income.query.filter_by(
+        user_id=current_user.id
+    ).order_by(
+        Income.date.desc()
+    ).limit(3).all()
+
+    recent_expense = Expense.query.filter_by(
+        user_id=current_user.id
+    ).order_by(
+        Expense.date.desc()
+    ).limit(3).all()
 
     return render_template(
         'index.html',
@@ -137,7 +235,9 @@ def home():
         income=income_total,
         expense=expense_total,
         savings=savings,
-        budget=budget_percent
+        budget=budget_percent,
+        recent_income=recent_income,
+        recent_expense=recent_expense
     )
 
 # ==================================
@@ -287,21 +387,168 @@ def profile():
 # INCOME PAGE
 # ==================================
 
-@app.route('/income')
+@app.route('/income', methods=['GET', 'POST'])
 @login_required
 def income():
 
-    return render_template('income.html')
+    if request.method == 'POST':
+
+        source = request.form['source']
+
+        amount = float(
+            request.form['amount']
+        )
+
+        if amount <= 0:
+
+            flash(
+                'Amount must be greater than zero!',
+                'danger'
+            )
+
+            return redirect('/income')
+
+        new_income = Income(
+            source=source,
+            amount=amount,
+            user_id=current_user.id
+        )
+
+        db.session.add(new_income)
+
+        db.session.commit()
+
+        flash(
+            'Income Added Successfully!',
+            'success'
+        )
+
+        return redirect('/income')
+
+    incomes = Income.query.filter_by(
+        user_id=current_user.id
+    ).order_by(
+        Income.date.desc()
+    ).all()
+
+    return render_template(
+        'income.html',
+        incomes=incomes
+    )
+
+# ==================================
+# DELETE INCOME
+# ==================================
+
+@app.route('/delete-income/<int:id>')
+@login_required
+def delete_income(id):
+
+    income = Income.query.get_or_404(id)
+
+    if income.user_id != current_user.id:
+
+        flash(
+            'Unauthorized Action!',
+            'danger'
+        )
+
+        return redirect('/income')
+
+    db.session.delete(income)
+
+    db.session.commit()
+
+    flash(
+        'Income Deleted Successfully!',
+        'success'
+    )
+
+    return redirect('/income')
 
 # ==================================
 # EXPENSE PAGE
 # ==================================
 
-@app.route('/expense')
+@app.route('/expense', methods=['GET', 'POST'])
 @login_required
 def expense():
 
-    return render_template('expense.html')
+    if request.method == 'POST':
+
+        category = request.form['category']
+
+        amount = float(
+            request.form['amount']
+        )
+
+        # Validation
+        if amount <= 0:
+
+            flash(
+                'Amount must be greater than zero!',
+                'danger'
+            )
+
+            return redirect('/expense')
+
+        new_expense = Expense(
+            category=category,
+            amount=amount,
+            user_id=current_user.id
+        )
+
+        db.session.add(new_expense)
+
+        db.session.commit()
+
+        flash(
+            'Expense Added Successfully!',
+            'success'
+        )
+
+        return redirect('/expense')
+
+    expenses = Expense.query.filter_by(
+        user_id=current_user.id
+    ).order_by(
+        Expense.date.desc()
+    ).all()
+
+    return render_template(
+        'expense.html',
+        expenses=expenses
+    )
+
+# ==================================
+# DELETE EXPENSE
+# ==================================
+
+@app.route('/delete-expense/<int:id>')
+@login_required
+def delete_expense(id):
+
+    expense = Expense.query.get_or_404(id)
+
+    if expense.user_id != current_user.id:
+
+        flash(
+            'Unauthorized Action!',
+            'danger'
+        )
+
+        return redirect('/expense')
+
+    db.session.delete(expense)
+
+    db.session.commit()
+
+    flash(
+        'Expense Deleted Successfully!',
+        'success'
+    )
+
+    return redirect('/expense')
 
 # ==================================
 # BUDGET PAGE
