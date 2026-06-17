@@ -1,64 +1,503 @@
-<h2>Add Expense</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="FinanceAI Expense Manager – Monitor and control your spending.">
+  <title>FinanceAI | Expenses</title>
 
-<form method="POST">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
 
-    <input
-        type="text"
-        name="category"
-        placeholder="Expense Category">
+<body>
 
-    <input
-        type="number"
-        name="amount"
-        placeholder="Amount">
+<!-- Mobile Hamburger -->
+<button class="mobile-hamburger" id="hamburgerBtn" aria-label="Open sidebar">
+  <i class="bi bi-list" style="font-size:20px;color:#334155;"></i>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <button type="submit">
+<div class="app-shell">
 
-        Save Expense
+  <!-- ========== SIDEBAR ========== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark"><i class="bi bi-graph-up-arrow"></i></div>
+      <div>
+        <h2 class="logo">FinanceAI</h2>
+        <small>Finance Cockpit</small>
+      </div>
+    </div>
 
-    </button>
+    <nav class="sidebar-nav">
+      <span class="nav-section-label">Main Menu</span>
+      <ul class="nav flex-column" style="gap:2px;">
+        <li><a class="nav-link" href="/"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+        <li><a class="nav-link" href="/income"><i class="bi bi-wallet2"></i> Income</a></li>
+        <li><a class="nav-link active" href="/expense"><i class="bi bi-receipt"></i> Expenses</a></li>
+        <li><a class="nav-link" href="/budget"><i class="bi bi-bar-chart-steps"></i> Budgets</a></li>
+        <li><a class="nav-link" href="/goal"><i class="bi bi-piggy-bank"></i> Goals</a></li>
+        <li><a class="nav-link" href="/report"><i class="bi bi-file-earmark-bar-graph"></i> Reports</a></li>
+      </ul>
+      <span class="nav-section-label" style="margin-top:16px;">Account</span>
+      <ul class="nav flex-column" style="gap:2px;">
+        <li><a class="nav-link" href="/settings"><i class="bi bi-gear"></i> Settings</a></li>
+        <li><a class="nav-link" href="/logout" style="color:rgba(239,68,68,0.7);"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+      </ul>
+    </nav>
 
-</form>
+    <div class="sidebar-footer">
+      <p>Expense Summary</p>
+      <h4>
+        ₹{% set total = namespace(val=0) %}{% for e in expenses %}{% set total.val = total.val + e.amount %}{% endfor %}{{ "%.0f"|format(total.val) }}
+      </h4>
+      <small>Total expenses tracked across all categories.</small>
+    </div>
+  </aside>
 
-<table>
+  <!-- ========== MAIN CONTENT ========== -->
+  <main class="main-content">
 
-<tr>
-    <th>Category</th>
-    <th>Amount</th>
-    <th>Date</th>
-    <th>Action</th>
-</tr>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div style="margin-top:20px;">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            <i class="bi bi-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% endwith %}
 
-    {% for expense in expenses %}
+    <!-- Topbar -->
+    <div class="topbar">
+      <div>
+        <p class="section-eyebrow">Finance Tracker</p>
+        <h1 class="dashboard-title">Expenses</h1>
+      </div>
+      <div class="topbar-actions">
+        <div class="topbar-search d-none d-md-block">
+          <i class="bi bi-search"></i>
+          <input type="text" id="topbarSearch" placeholder="Search expenses…" autocomplete="off">
+        </div>
+        <div class="dropdown">
+          <button class="user-chip dropdown-toggle" data-bs-toggle="dropdown">
+            <div class="user-avatar">{{ current_user.name[0].upper() }}</div>
+            <span class="d-none d-sm-inline">{{ current_user.name.split()[0] }}</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <div style="padding:12px 16px 8px;border-bottom:1px solid #F1F5F9;">
+                <div style="font-size:13.5px;font-weight:700;color:#0F172A;">{{ current_user.name }}</div>
+                <div style="font-size:11.5px;color:#94A3B8;">{{ current_user.email }}</div>
+              </div>
+            </li>
+            <li><a class="dropdown-item mt-1" href="/profile"><i class="bi bi-person"></i> Profile</a></li>
+            <li><a class="dropdown-item" href="/settings"><i class="bi bi-gear"></i> Settings</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="/logout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
 
-<tr>
+    <!-- Page Header -->
+    <div class="page-header mt-24">
+      <div>
+        <h4 style="font-size:18px;font-weight:700;color:#0F172A;letter-spacing:-0.3px;margin:0;">
+          Expense Records
+        </h4>
+        <p style="font-size:13px;color:#64748B;margin:4px 0 0;">
+          {{ expenses|length }} record{% if expenses|length != 1 %}s{% endif %} found
+        </p>
+      </div>
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div class="data-search">
+          <i class="bi bi-search"></i>
+          <input type="text" id="expenseSearch" placeholder="Search category…" oninput="filterTable()" autocomplete="off">
+        </div>
+        <button class="btn-primary-custom"
+                style="background:linear-gradient(135deg,#EF4444,#DC2626);box-shadow:0 4px 14px rgba(239,68,68,0.3);"
+                data-bs-toggle="modal" data-bs-target="#addExpenseModal" id="addExpenseBtn">
+          <i class="bi bi-plus-lg"></i> Add Expense
+        </button>
+      </div>
+    </div>
 
-    <td>
-        {{ expense.category }}
-    </td>
+    <!-- Stats Strip -->
+    <div class="row g-3" style="margin-bottom:20px;">
+      {% set total_expense = namespace(val=0) %}
+      {% for e in expenses %}{% set total_expense.val = total_expense.val + e.amount %}{% endfor %}
+      {% set avg = (total_expense.val / expenses|length) if expenses|length > 0 else 0 %}
 
-    <td>
-        ₹{{ expense.amount }}
-    </td>
+      <div class="col-md-4">
+        <div class="kpi-card expense" style="padding:18px 22px;">
+          <div class="kpi-label">Total Expenses</div>
+          <div class="kpi-value" style="font-size:22px;">₹{{ "%.0f"|format(total_expense.val) }}</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="kpi-card budget" style="padding:18px 22px;">
+          <div class="kpi-label">Total Records</div>
+          <div class="kpi-value" style="font-size:22px;">{{ expenses|length }}</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="kpi-card savings" style="padding:18px 22px;">
+          <div class="kpi-label">Average Expense</div>
+          <div class="kpi-value" style="font-size:22px;">₹{{ "%.0f"|format(avg) }}</div>
+        </div>
+      </div>
+    </div>
 
-    <td>
-        {{ expense.date.strftime('%d-%m-%Y') }}
-    </td>
+    <!-- Data Table -->
+    <div class="data-table-card">
+      <div class="data-table-header">
+        <h5 class="section-title">
+          <i class="bi bi-receipt"></i>
+          All Expense Entries
+        </h5>
+        <span style="font-size:12px;color:#94A3B8;font-weight:500;" id="rowCount">
+          {{ expenses|length }} entries
+        </span>
+      </div>
 
-    <td>
+      {% if expenses %}
+      <div class="table-responsive">
+        <table class="data-table" id="expenseTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Category</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Priority</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for expense in expenses %}
+            <tr class="expense-row" data-category="{{ expense.category.lower() }}">
+              <td style="color:#94A3B8;font-size:13px;">{{ loop.index }}</td>
+              <td>
+                <div class="category-cell">
+                  <div class="category-icon" id="cat-icon-{{ loop.index }}"
+                       style="background:rgba(239,68,68,0.1);color:#EF4444;">
+                    <!-- icon set by JS -->
+                    <i class="bi bi-receipt"></i>
+                  </div>
+                  <div>
+                    <div class="cell-label">{{ expense.category }}</div>
+                    <div style="font-size:11px;color:#94A3B8;margin-top:1px;">Expense</div>
+                  </div>
+                </div>
+              </td>
+              <td class="amount-expense">-₹{{ "%.2f"|format(expense.amount) }}</td>
+              <td>
+                <span class="date-badge">
+                  <i class="bi bi-calendar3"></i>
+                  {{ expense.date.strftime('%d %b %Y') }}
+                </span>
+              </td>
+              <td>
+                {% if expense.amount >= 5000 %}
+                  <span class="kpi-badge down" style="font-size:11px;"><i class="bi bi-arrow-up-circle-fill"></i> High</span>
+                {% elif expense.amount >= 1000 %}
+                  <span class="kpi-badge warn" style="font-size:11px;"><i class="bi bi-dash-circle-fill"></i> Medium</span>
+                {% else %}
+                  <span class="kpi-badge up" style="font-size:11px;"><i class="bi bi-arrow-down-circle-fill"></i> Low</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="/delete-expense/{{ expense.id }}"
+                   class="btn-delete"
+                   onclick="return confirmDelete(event, this, '{{ expense.category }}')">
+                  <i class="bi bi-trash3"></i> Delete
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
 
-        <a href="/delete-expense/{{ expense.id }}"
-           class="btn btn-danger btn-sm"
-           onclick="return confirm('Delete this expense?')">
+      <!-- No Results -->
+      <div id="noResults" style="display:none;">
+        <div class="empty-state">
+          <div class="empty-icon"><i class="bi bi-search"></i></div>
+          <h4>No matching expenses</h4>
+          <p>Try a different search term or clear the filter.</p>
+          <button class="btn-primary-custom" onclick="clearSearch()"
+                  style="background:linear-gradient(135deg,#EF4444,#DC2626);box-shadow:0 4px 14px rgba(239,68,68,0.3);">
+            <i class="bi bi-x-circle"></i> Clear Search
+          </button>
+        </div>
+      </div>
 
-            Delete
+      {% else %}
+      <!-- Empty State -->
+      <div class="empty-state">
+        <div class="empty-icon" style="background:rgba(239,68,68,0.08);color:#EF4444;"><i class="bi bi-receipt"></i></div>
+        <h4>No expenses recorded yet</h4>
+        <p>Track your spending by adding your first expense entry below.</p>
+        <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#addExpenseModal"
+                style="background:linear-gradient(135deg,#EF4444,#DC2626);box-shadow:0 4px 14px rgba(239,68,68,0.3);">
+          <i class="bi bi-plus-lg"></i> Add First Expense
+        </button>
+      </div>
+      {% endif %}
 
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center mt-5 mb-2">
+      <small style="color:#94A3B8;font-size:12px;">FinanceAI © 2026 — Personal Finance Manager</small>
+    </footer>
+
+  </main>
+
+</div>
+
+<!-- ===== ADD EXPENSE MODAL ===== -->
+<div class="modal fade" id="addExpenseModal" tabindex="-1" aria-labelledby="addExpenseModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:32px;background:rgba(239,68,68,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#EF4444;font-size:15px;">
+            <i class="bi bi-receipt"></i>
+          </div>
+          <h5 class="modal-title" id="addExpenseModalLabel">Add New Expense</h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form method="POST" id="addExpenseForm">
+        <div class="modal-body">
+
+          <!-- Category -->
+          <div class="mb-3">
+            <label class="form-label" for="expenseCategory">Category</label>
+            <div style="position:relative;">
+              <i class="bi bi-tag" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#94A3B8;font-size:14px;pointer-events:none;"></i>
+              <select name="category" id="expenseCategory" class="form-select"
+                      style="padding-left:38px !important;" required onchange="updatePreview()">
+                <option value="" disabled selected>Select category</option>
+                <optgroup label="Daily Living">
+                  <option value="Food & Dining">🍔 Food &amp; Dining</option>
+                  <option value="Groceries">🛒 Groceries</option>
+                  <option value="Coffee & Snacks">☕ Coffee &amp; Snacks</option>
+                </optgroup>
+                <optgroup label="Housing">
+                  <option value="Rent">🏠 Rent</option>
+                  <option value="Electricity">⚡ Electricity</option>
+                  <option value="Water & Utilities">💧 Water &amp; Utilities</option>
+                  <option value="Internet">🌐 Internet</option>
+                </optgroup>
+                <optgroup label="Transport">
+                  <option value="Fuel">⛽ Fuel</option>
+                  <option value="Public Transport">🚌 Public Transport</option>
+                  <option value="Cab / Auto">🚕 Cab / Auto</option>
+                </optgroup>
+                <optgroup label="Health">
+                  <option value="Healthcare">🏥 Healthcare</option>
+                  <option value="Medicine">💊 Medicine</option>
+                  <option value="Gym & Fitness">💪 Gym &amp; Fitness</option>
+                </optgroup>
+                <optgroup label="Lifestyle">
+                  <option value="Shopping">🛍️ Shopping</option>
+                  <option value="Entertainment">🎬 Entertainment</option>
+                  <option value="Subscriptions">📱 Subscriptions</option>
+                  <option value="Travel">✈️ Travel</option>
+                </optgroup>
+                <optgroup label="Education">
+                  <option value="Education">📚 Education</option>
+                  <option value="Books">📖 Books</option>
+                </optgroup>
+                <option value="Other">📌 Other</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Amount -->
+          <div class="mb-3">
+            <label class="form-label" for="expenseAmount">Amount (₹)</label>
+            <div style="position:relative;">
+              <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#64748B;font-size:15px;font-weight:700;pointer-events:none;">₹</span>
+              <input type="number" name="amount" id="expenseAmount" class="form-control"
+                     style="padding-left:32px !important;" placeholder="0.00"
+                     min="0.01" step="0.01" required oninput="updatePreview()">
+            </div>
+          </div>
+
+          <!-- Live Preview -->
+          <div id="expensePreview" style="display:none;padding:14px 16px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:10px;margin-top:8px;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#DC2626;margin-bottom:4px;">Preview</div>
+            <div style="font-size:18px;font-weight:800;color:#DC2626;" id="previewExpenseAmount">-₹0</div>
+            <div style="font-size:12px;color:#64748B;margin-top:2px;" id="previewExpenseCategory">—</div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal"
+                  style="border:1px solid #E2E8F0;border-radius:10px;padding:9px 20px;font-size:13.5px;font-weight:600;color:#64748B;">
+            Cancel
+          </button>
+          <button type="submit" class="btn-primary-custom" id="saveExpenseBtn"
+                  style="background:linear-gradient(135deg,#EF4444,#DC2626);box-shadow:0 4px 14px rgba(239,68,68,0.3);">
+            <i class="bi bi-check-lg"></i> Save Expense
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===== DELETE CONFIRM MODAL ===== -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-body" style="padding:24px !important;">
+        <div style="width:44px;height:44px;background:rgba(239,68,68,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#EF4444;font-size:20px;margin-bottom:16px;">
+          <i class="bi bi-trash3"></i>
+        </div>
+        <h5 style="font-size:16px;font-weight:700;color:#0F172A;margin-bottom:8px;">Delete Expense</h5>
+        <p style="font-size:13.5px;color:#64748B;margin:0;" id="deleteConfirmText">
+          Are you sure? This action cannot be undone.
+        </p>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid #F1F5F9 !important;padding:16px 24px !important;">
+        <button type="button" class="btn" data-bs-dismiss="modal"
+                style="border:1px solid #E2E8F0;border-radius:10px;padding:9px 18px;font-size:13px;font-weight:600;color:#64748B;">
+          Cancel
+        </button>
+        <a href="#" id="deleteConfirmLink" class="btn-delete" style="padding:9px 18px;font-size:13px;">
+          <i class="bi bi-trash3"></i> Delete
         </a>
+      </div>
+    </div>
+  </div>
+</div>
 
-    </td>
+<!-- ========== SCRIPTS ========== -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Mobile Sidebar
+const hamburger = document.getElementById('hamburgerBtn');
+const sidebar   = document.getElementById('sidebar');
+const overlay   = document.getElementById('sidebarOverlay');
+hamburger.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
+overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); });
 
-</tr>
+// Category Icons Map
+const catIcons = {
+  'food':         { icon: 'bi-egg-fried',        bg: 'rgba(245,158,11,0.1)',  color: '#F59E0B' },
+  'groceries':    { icon: 'bi-cart3',             bg: 'rgba(34,197,94,0.1)',   color: '#22C55E' },
+  'coffee':       { icon: 'bi-cup-hot',           bg: 'rgba(120,53,15,0.08)', color: '#92400E' },
+  'rent':         { icon: 'bi-house-door',        bg: 'rgba(37,99,235,0.1)',   color: '#2563EB' },
+  'electricity':  { icon: 'bi-lightning-charge',  bg: 'rgba(245,158,11,0.1)', color: '#F59E0B' },
+  'water':        { icon: 'bi-droplet',           bg: 'rgba(6,182,212,0.1)',   color: '#06B6D4' },
+  'internet':     { icon: 'bi-wifi',              bg: 'rgba(37,99,235,0.1)',   color: '#2563EB' },
+  'fuel':         { icon: 'bi-fuel-pump',         bg: 'rgba(239,68,68,0.1)',   color: '#EF4444' },
+  'transport':    { icon: 'bi-bus-front',         bg: 'rgba(139,92,246,0.1)', color: '#8B5CF6' },
+  'cab':          { icon: 'bi-taxi-front',        bg: 'rgba(245,158,11,0.1)', color: '#F59E0B' },
+  'healthcare':   { icon: 'bi-heart-pulse',       bg: 'rgba(239,68,68,0.1)',   color: '#EF4444' },
+  'medicine':     { icon: 'bi-capsule',           bg: 'rgba(239,68,68,0.1)',   color: '#EF4444' },
+  'gym':          { icon: 'bi-bicycle',           bg: 'rgba(34,197,94,0.1)',   color: '#22C55E' },
+  'shopping':     { icon: 'bi-bag',               bg: 'rgba(236,72,153,0.1)', color: '#EC4899' },
+  'entertainment':{ icon: 'bi-film',              bg: 'rgba(139,92,246,0.1)', color: '#8B5CF6' },
+  'subscription': { icon: 'bi-phone',             bg: 'rgba(37,99,235,0.1)',   color: '#2563EB' },
+  'travel':       { icon: 'bi-airplane',          bg: 'rgba(6,182,212,0.1)',   color: '#06B6D4' },
+  'education':    { icon: 'bi-book',              bg: 'rgba(37,99,235,0.1)',   color: '#2563EB' },
+  'book':         { icon: 'bi-journal-text',      bg: 'rgba(37,99,235,0.1)',   color: '#2563EB' },
+};
 
-{% endfor %}
+function getCatStyle(category) {
+  const key = category.toLowerCase();
+  for (const k in catIcons) {
+    if (key.includes(k)) return catIcons[k];
+  }
+  return { icon: 'bi-receipt', bg: 'rgba(239,68,68,0.1)', color: '#EF4444' };
+}
 
-</table>
+// Apply icons on load
+document.querySelectorAll('.expense-row').forEach((row, idx) => {
+  const cat  = row.dataset.category;
+  const s    = getCatStyle(cat);
+  const cell = document.getElementById('cat-icon-' + (idx + 1));
+  if (cell) {
+    cell.style.background = s.bg;
+    cell.style.color      = s.color;
+    cell.innerHTML = '<i class="bi ' + s.icon + '"></i>';
+  }
+});
+
+// Table Search
+function filterTable() {
+  const query = document.getElementById('expenseSearch').value.toLowerCase().trim();
+  const rows  = document.querySelectorAll('.expense-row');
+  let visible = 0;
+
+  rows.forEach(row => {
+    const cat   = row.dataset.category || '';
+    const match = cat.includes(query);
+    row.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+
+  document.getElementById('noResults').style.display = visible === 0 ? 'block' : 'none';
+  document.getElementById('rowCount').textContent = visible + ' ' + (visible === 1 ? 'entry' : 'entries');
+}
+
+function clearSearch() {
+  document.getElementById('expenseSearch').value = '';
+  filterTable();
+}
+
+// Live Preview
+function updatePreview() {
+  const cat = document.getElementById('expenseCategory').value;
+  const amt = parseFloat(document.getElementById('expenseAmount').value);
+  const preview = document.getElementById('expensePreview');
+
+  if (cat && amt > 0) {
+    preview.style.display = 'block';
+    document.getElementById('previewExpenseAmount').textContent =
+      '-₹' + amt.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    document.getElementById('previewExpenseCategory').textContent = cat;
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+// Delete Confirm Modal
+const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+
+function confirmDelete(e, el, catName) {
+  e.preventDefault();
+  document.getElementById('deleteConfirmText').textContent =
+    'Are you sure you want to delete "' + catName + '" expense? This action cannot be undone.';
+  document.getElementById('deleteConfirmLink').href = el.href;
+  deleteModal.show();
+  return false;
+}
+
+// Form Submit Loading
+document.getElementById('addExpenseForm').addEventListener('submit', function() {
+  const btn = document.getElementById('saveExpenseBtn');
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Saving…';
+  btn.disabled = true;
+});
+</script>
+
+</body>
+</html>
