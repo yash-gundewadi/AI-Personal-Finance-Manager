@@ -217,17 +217,45 @@ def home():
         (expense_total / income_total) * 100
     ) if income_total > 0 else 0
 
+    health_score = int(
+        (savings / income_total) * 100
+    ) if income_total > 0 else 0
+    health_score = max(0, min(100, health_score))
+
+    income_count = Income.query.filter_by(user_id=current_user.id).count()
+    expense_count = Expense.query.filter_by(user_id=current_user.id).count()
+    total_transactions = income_count + expense_count
+
     recent_income = Income.query.filter_by(
         user_id=current_user.id
     ).order_by(
         Income.date.desc()
-    ).limit(3).all()
+    ).limit(5).all()
 
     recent_expense = Expense.query.filter_by(
         user_id=current_user.id
     ).order_by(
         Expense.date.desc()
-    ).limit(3).all()
+    ).limit(5).all()
+
+    all_transactions = []
+    for inc in recent_income:
+        all_transactions.append({
+            'type': 'income',
+            'desc': inc.source,
+            'amount': inc.amount,
+            'date': inc.date
+        })
+    for exp in recent_expense:
+        all_transactions.append({
+            'type': 'expense',
+            'desc': exp.category,
+            'amount': exp.amount,
+            'date': exp.date
+        })
+        
+    all_transactions.sort(key=lambda x: x['date'], reverse=True)
+    recent_transactions = all_transactions[:5]
 
     return render_template(
         'index.html',
@@ -236,8 +264,9 @@ def home():
         expense=expense_total,
         savings=savings,
         budget=budget_percent,
-        recent_income=recent_income,
-        recent_expense=recent_expense
+        health_score=health_score,
+        total_transactions=total_transactions,
+        recent_transactions=recent_transactions
     )
 
 # ==================================

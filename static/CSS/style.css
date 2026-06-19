@@ -458,33 +458,28 @@ body {
   border-radius: var(--radius);
   border: 1px solid var(--border);
   padding: 24px;
-  transition: var(--transition);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
   overflow: hidden;
   cursor: default;
 }
 
-.kpi-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  border-radius: var(--radius) var(--radius) 0 0;
-  transition: var(--transition);
+.glass-panel {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
 }
 
 .kpi-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-  border-color: transparent;
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
 }
 
-.kpi-card.income::before { background: linear-gradient(90deg, #22C55E, #4ADE80); }
-.kpi-card.expense::before { background: linear-gradient(90deg, #EF4444, #F87171); }
-.kpi-card.savings::before { background: linear-gradient(90deg, #2563EB, #3B82F6); }
-.kpi-card.budget::before { background: linear-gradient(90deg, #F59E0B, #FBBF24); }
+.kpi-card.income { background: linear-gradient(135deg, rgba(34,197,94,0.03), rgba(34,197,94,0.12)); border-color: rgba(34,197,94,0.2); }
+.kpi-card.expense { background: linear-gradient(135deg, rgba(239,68,68,0.03), rgba(239,68,68,0.12)); border-color: rgba(239,68,68,0.2); }
+.kpi-card.savings { background: linear-gradient(135deg, rgba(37,99,235,0.03), rgba(37,99,235,0.12)); border-color: rgba(37,99,235,0.2); }
+.kpi-card.budget { background: linear-gradient(135deg, rgba(245,158,11,0.03), rgba(245,158,11,0.12)); border-color: rgba(245,158,11,0.2); }
+.kpi-card.transactions { background: linear-gradient(135deg, rgba(139,92,246,0.03), rgba(139,92,246,0.12)); border-color: rgba(139,92,246,0.2); }
 
 .kpi-icon {
   width: 44px;
@@ -495,12 +490,18 @@ body {
   justify-content: center;
   font-size: 18px;
   margin-bottom: 16px;
+  transition: transform 0.3s ease;
 }
 
-.kpi-icon.income { background: rgba(34,197,94,0.1); color: #22C55E; }
-.kpi-icon.expense { background: rgba(239,68,68,0.1); color: #EF4444; }
-.kpi-icon.savings { background: rgba(37,99,235,0.1); color: #2563EB; }
-.kpi-icon.budget { background: rgba(245,158,11,0.1); color: #F59E0B; }
+.kpi-card:hover .kpi-icon {
+  transform: scale(1.1);
+}
+
+.kpi-icon.income { background: rgba(34,197,94,0.15); color: #16A34A; }
+.kpi-icon.expense { background: rgba(239,68,68,0.15); color: #DC2626; }
+.kpi-icon.savings { background: rgba(37,99,235,0.15); color: #2563EB; }
+.kpi-icon.budget { background: rgba(245,158,11,0.15); color: #D97706; }
+.kpi-icon.transactions { background: rgba(139,92,246,0.15); color: #7C3AED; }
 
 .kpi-label {
   font-size: 11.5px;
