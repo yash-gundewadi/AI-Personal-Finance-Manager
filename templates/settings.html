@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid animate-slide-up">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-8">
+            <h2 class="mb-4">Preferences & Settings</h2>
+            
+            <div class="glass-card p-4 mb-4">
+                <h5 class="mb-4 text-primary-light">Appearance</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <div class="fw-bold">Dark Mode</div>
+                        <div class="text-muted small">Use dark theme across the application</div>
+                    </div>
+                    <div class="form-check form-switch fs-4">
+                        <input class="form-check-input" type="checkbox" role="switch" id="darkModeSwitch" checked>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card p-4 mb-4">
+                <h5 class="mb-4 text-primary-light">Application</h5>
+                
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Default Currency</label>
+                    <select class="form-select bg-dark text-white border-secondary w-50">
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="GBP">GBP (£)</option>
+                        <option value="INR">INR (₹)</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Monthly Budget Limit</label>
+                    <div class="input-group w-50">
+                        <span class="input-group-text bg-dark text-white border-secondary">$</span>
+                        <input type="number" class="form-control bg-dark text-white border-secondary" value="2000">
+                    </div>
+                    <div class="form-text text-muted">Used for health score calculations.</div>
+                </div>
+            </div>
+
+            <div class="glass-card p-4 mb-4">
+                <h5 class="mb-4 text-primary-light">Notifications</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <div class="fw-bold">AI Insight Alerts</div>
+                        <div class="text-muted small">Receive toasts for financial recommendations</div>
+                    </div>
+                    <div class="form-check form-switch fs-4">
+                        <input class="form-check-input" type="checkbox" role="switch" checked>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold">Weekly Report</div>
+                        <div class="text-muted small">Email me a summary of my weekly spending</div>
+                    </div>
+                    <div class="form-check form-switch fs-4">
+                        <input class="form-check-input" type="checkbox" role="switch">
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-end">
+                <button class="btn btn-primary-glow" onclick="saveSettings()">Save Changes</button>
+            </div>
+            
+            <!-- Toast Notification -->
+            <div class="toast-container position-fixed bottom-0 end-0 p-3">
+                <div id="saveToast" class="toast glass-card" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header bg-transparent text-white border-bottom border-secondary">
+                        <i class="fa-solid fa-circle-check text-success me-2"></i>
+                        <strong class="me-auto">Settings</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        Your preferences have been saved successfully!
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function saveSettings() {
+        const toast = new bootstrap.Toast(document.getElementById('saveToast'));
+        toast.show();
+    }
+</script>
+{% endblock %}

@@ -1,622 +1,411 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="FinanceAI Dashboard – Your personal finance command center.">
-  <title>FinanceAI | Dashboard</title>
+{% extends "base.html" %}
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
+{% block content %}
+<div class="container-fluid animate-fade-in">
 
-<!-- Mobile Hamburger -->
-<button class="mobile-hamburger" id="hamburgerBtn" aria-label="Open sidebar">
-  <i class="bi bi-list" style="font-size:20px;color:#334155;"></i>
-</button>
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-<div class="app-shell">
-
-  <!-- ========== SIDEBAR ========== -->
-  <aside class="sidebar" id="sidebar">
-
-    <div class="sidebar-brand">
-      <div class="brand-mark">
-        <i class="bi bi-graph-up-arrow"></i>
-      </div>
-      <div>
-        <h2 class="logo">FinanceAI</h2>
-        <small>Finance Cockpit</small>
-      </div>
-    </div>
-
-    <nav class="sidebar-nav">
-      <span class="nav-section-label">Main Menu</span>
-
-      <ul class="nav flex-column" style="gap:2px;">
-        <li class="nav-item">
-          <a class="nav-link active" href="/">
-            <i class="bi bi-speedometer2"></i> Dashboard
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/income">
-            <i class="bi bi-wallet2"></i> Income
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/expense">
-            <i class="bi bi-receipt"></i> Expenses
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/budget">
-            <i class="bi bi-bar-chart-steps"></i> Budgets
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/goal">
-            <i class="bi bi-piggy-bank"></i> Goals
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/report">
-            <i class="bi bi-file-earmark-bar-graph"></i> Reports
-          </a>
-        </li>
-      </ul>
-
-      <span class="nav-section-label" style="margin-top:16px;">Account</span>
-
-      <ul class="nav flex-column" style="gap:2px;">
-        <li class="nav-item">
-          <a class="nav-link" href="/settings">
-            <i class="bi bi-gear"></i> Settings
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/logout" style="color:rgba(239,68,68,0.7);">
-            <i class="bi bi-box-arrow-right"></i> Logout
-          </a>
-        </li>
-      </ul>
-    </nav>
-
-    <div class="sidebar-footer">
-      <p>Financial Snapshot</p>
-      <h4>{{ budget }}%</h4>
-      <small>Budget utilization — keep expenses below income to improve your score.</small>
-    </div>
-
-  </aside>
-
-  <!-- ========== MAIN CONTENT ========== -->
-  <main class="main-content">
-
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div style="margin-top:20px;">
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            <i class="bi bi-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-    {% endwith %}
-
-    <!-- ===== TOPBAR ===== -->
-    <div class="topbar">
-      <div>
-        <p class="section-eyebrow">Overview</p>
-        <h1 class="dashboard-title">Dashboard</h1>
-      </div>
-
-      <div class="topbar-actions">
-        <!-- Search -->
-        <div class="topbar-search d-none d-md-block">
-          <i class="bi bi-search"></i>
-          <input type="text" id="topbarSearch" placeholder="Search anything…" autocomplete="off">
-        </div>
-
-        <!-- Notification Bell -->
-        <button class="btn-icon position-relative" id="notifBtn" title="Notifications">
-          <i class="bi bi-bell"></i>
-          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:#EF4444;font-size:9px;">3</span>
-        </button>
-
-        <!-- User Dropdown -->
-        <div class="dropdown">
-          <button class="user-chip dropdown-toggle" data-bs-toggle="dropdown" id="userDropdown" aria-expanded="false">
-            <div class="user-avatar">{{ current_user.name[0].upper() }}</div>
-            <span class="d-none d-sm-inline">{{ current_user.name.split()[0] }}</span>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li>
-              <div style="padding:12px 16px 8px;border-bottom:1px solid #F1F5F9;">
-                <div style="font-size:13.5px;font-weight:700;color:#0F172A;">{{ current_user.name }}</div>
-                <div style="font-size:11.5px;color:#94A3B8;">{{ current_user.email }}</div>
-              </div>
-            </li>
-            <li><a class="dropdown-item mt-1" href="/profile"><i class="bi bi-person"></i> Profile</a></li>
-            <li><a class="dropdown-item" href="/settings"><i class="bi bi-gear"></i> Settings</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item text-danger" href="/logout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== HERO CARD ===== -->
-    <div class="hero-card" data-aos="fade-up">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-          <div>
-            <h3>Hello {{ current_user.name }} 👋</h3>
-            <p class="mb-1 text-muted">Welcome back to FinanceAI. Today is <script>document.write(new Date().toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'}));</script>.</p>
-            <p>You have saved ₹{{ "%.0f"|format(savings) }} so far. Keep growing your wealth.</p>
-          </div>
-          <div class="hero-badge">
-            <i class="bi bi-graph-up-arrow"></i>
-            {% if health_score >= 60 %}Financially Healthy{% else %}Needs Attention{% endif %}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== KPI CARDS ===== -->
-    <div class="row g-3 mt-24" id="kpiSection">
-
-      <div class="col-lg col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="0">
-        <div class="kpi-card income glass-panel">
-          <div class="kpi-icon income"><i class="bi bi-wallet2"></i></div>
-          <div class="kpi-label">Total Income</div>
-          <div class="kpi-value">₹{{ "%.0f"|format(income) }}</div>
-          <span class="kpi-badge up"><i class="bi bi-arrow-up-short"></i> +12% this month</span>
-        </div>
-      </div>
-
-      <div class="col-lg col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="60">
-        <div class="kpi-card expense glass-panel">
-          <div class="kpi-icon expense"><i class="bi bi-receipt"></i></div>
-          <div class="kpi-label">Total Expenses</div>
-          <div class="kpi-value">₹{{ "%.0f"|format(expense) }}</div>
-          <span class="kpi-badge down"><i class="bi bi-arrow-up-short"></i> +8% this month</span>
-        </div>
-      </div>
-
-      <div class="col-lg col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="120">
-        <div class="kpi-card savings glass-panel">
-          <div class="kpi-icon savings"><i class="bi bi-piggy-bank"></i></div>
-          <div class="kpi-label">Net Savings</div>
-          <div class="kpi-value">₹{{ "%.0f"|format(savings) }}</div>
-          <span class="kpi-badge {% if savings >= 0 %}neutral{% else %}down{% endif %}">
-            <i class="bi bi-{% if savings >= 0 %}trending-up{% else %}trending-down{% endif %}"></i>
-            {% if savings >= 0 %}Growing steadily{% else %}In deficit{% endif %}
-          </span>
-        </div>
-      </div>
-
-      <div class="col-lg col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="180">
-        <div class="kpi-card budget glass-panel">
-          <div class="kpi-icon budget"><i class="bi bi-bar-chart"></i></div>
-          <div class="kpi-label">Budget Used</div>
-          <div class="kpi-value">{{ budget }}%</div>
-          <span class="kpi-badge {% if budget <= 80 %}neutral{% else %}down{% endif %}">
-            <i class="bi bi-{% if budget <= 80 %}check-circle{% else %}exclamation-circle{% endif %}"></i>
-            {% if budget <= 80 %}Within limit{% else %}Over budget{% endif %}
-          </span>
-        </div>
-      </div>
-
-      <div class="col-lg col-md-4 col-sm-6" data-aos="fade-up" data-aos-delay="240">
-        <div class="kpi-card transactions glass-panel">
-          <div class="kpi-icon transactions"><i class="bi bi-arrow-left-right"></i></div>
-          <div class="kpi-label">Total Transactions</div>
-          <div class="kpi-value">{{ total_transactions }}</div>
-          <span class="kpi-badge neutral"><i class="bi bi-activity"></i> Active</span>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- ===== FINANCIAL HEALTH + QUICK ACTIONS ===== -->
-    <div class="row g-3 mt-24">
-
-      <!-- Financial Health Score -->
-      <div class="col-lg-7" data-aos="fade-up">
-        <div class="health-card">
-          <div class="d-flex align-items-center justify-content-between mb-4">
-            <h5 class="section-title">
-              <i class="bi bi-heart-pulse"></i>
-              Financial Health Score
-            </h5>
-            <span class="kpi-badge {% if budget <= 60 %}up{% elif budget <= 80 %}warn{% else %}down{% endif %}" style="font-size:12px;padding:5px 12px;">
-              {% if budget <= 60 %}Excellent{% elif budget <= 80 %}Good{% else %}Needs Attention{% endif %}
-            </span>
-          </div>
-
-          <div class="circular-progress-wrap">
-            <!-- SVG Circular Progress -->
-            <div class="circular-progress">
-              <svg width="100" height="100" viewBox="0 0 100 100">
-                <defs>
-                  <linearGradient id="healthGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#22C55E"/>
-                    <stop offset="100%" stop-color="#2563EB"/>
-                  </linearGradient>
-                </defs>
-                <circle class="track" cx="50" cy="50" r="40"/>
-                <circle class="fill" cx="50" cy="50" r="40"
-                  id="healthFill"
-                  style="stroke-dashoffset: {{ 251.2 - (251.2 * health_score / 100) }};"/>
-              </svg>
-              <div class="circular-label">
-                <span class="score" id="healthScore">{{ health_score }}</span>
-                <span class="score-unit">/ 100</span>
-              </div>
+    <!-- Hero Section -->
+    <div class="glass-card mb-4 p-4 position-relative overflow-hidden" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(99, 102, 241, 0.1) 100%);">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="fw-bold mb-2">Hello {{ current_user.name if current_user.is_authenticated else user.name|default('User') }} 👋</h2>
+                <p class="text-muted mb-0">Welcome back to your AI Powered Personal Finance Dashboard</p>
             </div>
-
-            <div class="health-indicators">
-              <div class="health-item">
-                <span class="health-item-label">Savings Rate</span>
-                <div class="health-bar-track">
-                  <div class="health-bar-fill {% if savings >= 0 %}success{% else %}danger{% endif %}"
-                       style="width:{% if income > 0 %}{{ [savings / income * 100, 100]|min|int }}{% else %}0{% endif %}%"></div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="d-inline-flex align-items-center rounded-pill px-4 py-2" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.9), rgba(129, 140, 248, 0.9)); color: white; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);">
+                    <i class="bi bi-graph-up-arrow me-2 fs-5"></i>
+                    <span class="fw-medium">On Track This Month</span>
                 </div>
-                <span class="health-item-val">{% if income > 0 %}{{ (savings / income * 100)|int }}%{% else %}—{% endif %}</span>
-              </div>
-              <div class="health-item">
-                <span class="health-item-label">Budget Control</span>
-                <div class="health-bar-track">
-                  <div class="health-bar-fill {% if budget <= 80 %}primary{% else %}danger{% endif %}"
-                       style="width:{{ [budget, 100]|min }}%"></div>
-                </div>
-                <span class="health-item-val">{{ budget }}%</span>
-              </div>
-              <div class="health-item">
-                <span class="health-item-label">Income Stability</span>
-                <div class="health-bar-track">
-                  <div class="health-bar-fill success" style="width:78%"></div>
-                </div>
-                <span class="health-item-val">78%</span>
-              </div>
-              <div class="health-item">
-                <span class="health-item-label">Goal Progress</span>
-                <div class="health-bar-track">
-                  <div class="health-bar-fill warning" style="width:42%"></div>
-                </div>
-                <span class="health-item-val">42%</span>
-              </div>
             </div>
-          </div>
         </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="col-lg-5" data-aos="fade-up" data-aos-delay="60">
-        <div class="health-card" style="height:100%;">
-          <h5 class="section-title mb-4">
-            <i class="bi bi-lightning-charge"></i>
-            Quick Actions
-          </h5>
-          <div class="row g-2">
-            <div class="col-6">
-              <a href="/income" class="quick-action-btn qa-income" data-bs-toggle="modal" data-bs-target="#addIncomeModal">
-                <div class="qa-icon"><i class="bi bi-plus-circle"></i></div>
-                <span class="qa-label">Add Income</span>
-              </a>
-            </div>
-            <div class="col-6">
-              <a href="/expense" class="quick-action-btn qa-expense" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
-                <div class="qa-icon"><i class="bi bi-dash-circle"></i></div>
-                <span class="qa-label">Add Expense</span>
-              </a>
-            </div>
-            <div class="col-6">
-              <a href="/goal" class="quick-action-btn qa-goal">
-                <div class="qa-icon"><i class="bi bi-flag"></i></div>
-                <span class="qa-label">Add Goal</span>
-              </a>
-            </div>
-            <div class="col-6">
-              <a href="/report" class="quick-action-btn qa-report">
-                <div class="qa-icon"><i class="bi bi-file-earmark-bar-graph"></i></div>
-                <span class="qa-label">Generate Report</span>
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-
+        <!-- Decorative blob -->
+        <div class="position-absolute top-0 end-0 translate-middle-y" style="width: 150px; height: 150px; background: rgba(99, 102, 241, 0.2); filter: blur(50px); border-radius: 50%;"></div>
     </div>
 
-    <!-- ===== CHARTS ===== -->
-    <div class="row g-3 mt-24">
-
-      <!-- Expense Analytics Chart -->
-      <div class="col-lg-8" data-aos="fade-up">
-        <div class="chart-card">
-          <div class="chart-header">
-            <h5 class="section-title">
-              <i class="bi bi-graph-up"></i>
-              Monthly Income vs Expenses
-            </h5>
-            <div class="chart-legend">
-              <div class="legend-item">
-                <div class="legend-dot" style="background:#22C55E;"></div>
-                Income
-              </div>
-              <div class="legend-item">
-                <div class="legend-dot" style="background:#EF4444;"></div>
-                Expenses
-              </div>
-            </div>
-          </div>
-          <canvas id="incomeExpenseChart" height="220"></canvas>
-        </div>
-      </div>
-
-      <!-- Expense Breakdown Donut -->
-      <div class="col-lg-4" data-aos="fade-up" data-aos-delay="60">
-        <div class="chart-card">
-          <div class="chart-header">
-            <h5 class="section-title">
-              <i class="bi bi-pie-chart"></i>
-              Expense Breakdown
-            </h5>
-          </div>
-          <canvas id="expensePieChart" height="200"></canvas>
-        </div>
-      </div>
-
+    <!-- Quick Actions -->
+    <div class="d-flex flex-wrap gap-3 mb-4">
+        <a href="{{ url_for('finance.income') }}" class="btn btn-gradient d-flex align-items-center gap-2"><i class="bi bi-plus-circle"></i> Add Income</a>
+        <a href="{{ url_for('finance.expense') }}" class="btn btn-gradient d-flex align-items-center gap-2" style="background: linear-gradient(135deg, #ef4444, #f87171); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);"><i class="bi bi-dash-circle"></i> Add Expense</a>
+        <a href="{{ url_for('finance.goal') if 'goal' in url_for.__code__.co_varnames else '#' }}" class="btn btn-gradient d-flex align-items-center gap-2" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);"><i class="bi bi-bullseye"></i> Add Goal</a>
+        <a href="{{ url_for('finance.report') }}" class="btn btn-gradient d-flex align-items-center gap-2" style="background: linear-gradient(135deg, #10b981, #34d399); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);"><i class="bi bi-file-earmark-bar-graph"></i> Generate Report</a>
     </div>
 
-    <!-- ===== RECENT TRANSACTIONS ===== -->
-    <div class="mt-24" data-aos="fade-up">
-      <div class="data-table-card">
-        <div class="data-table-header">
-          <h5 class="section-title">
-            <i class="bi bi-clock-history"></i>
-            Recent Transactions
-          </h5>
-          <a href="/income" class="btn-primary-custom" style="font-size:12.5px;padding:8px 16px;">
-            <i class="bi bi-arrow-right-short"></i> View All
-          </a>
-        </div>
-
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Description</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody id="recentTxBody">
-
-              {% for tx in recent_transactions %}
-              <tr>
-                <td>
-                  <div class="source-cell">
-                    {% if tx.type == 'income' %}
-                    <div class="category-icon" style="background:rgba(34,197,94,0.1);color:#22C55E;">
-                      <i class="bi bi-arrow-down-right"></i>
+    <!-- Metrics Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="metric-title">Total Income</div>
+                        <div class="metric-value mt-2 text-success">₹{{ "%.2f"|format(income|default(0)) }}</div>
                     </div>
-                    {% else %}
-                    <div class="category-icon" style="background:rgba(239,68,68,0.1);color:#EF4444;">
-                      <i class="bi bi-arrow-up-right"></i>
+                    <div class="metric-icon icon-income">
+                        <i class="bi bi-wallet2"></i>
                     </div>
-                    {% endif %}
-                    <span class="cell-label">{{ tx.desc }}</span>
-                  </div>
-                </td>
-                <td>
-                  {% if tx.type == 'income' %}
-                  <span class="tx-type-badge income"><i class="bi bi-arrow-down-circle"></i> Income</span>
-                  {% else %}
-                  <span class="tx-type-badge expense"><i class="bi bi-arrow-up-circle"></i> Expense</span>
-                  {% endif %}
-                </td>
-                <td class="{% if tx.type == 'income' %}amount-income{% else %}amount-expense{% endif %}">
-                  {% if tx.type == 'income' %}+{% else %}-{% endif %}₹{{ "%.0f"|format(tx.amount) }}
-                </td>
-                <td><span class="date-badge"><i class="bi bi-calendar3"></i> {{ tx.date.strftime('%d %b %Y') }}</span></td>
-              </tr>
-              {% endfor %}
-
-              {% if not recent_transactions %}
-              <tr>
-                <td colspan="4">
-                  <div class="empty-state text-center" style="padding:60px 24px;">
-                    <div class="empty-icon mx-auto mb-3" style="font-size: 3rem; color: #94A3B8;">
-                      <i class="bi bi-inbox"></i>
-                    </div>
-                    <h4 class="mb-2" style="font-weight: 700; color: #1E293B;">No Transactions Yet</h4>
-                    <p class="text-muted mb-4">Start by adding your first income or expense to see it here.</p>
-                    <a href="/income" class="btn btn-primary" style="background: linear-gradient(135deg, #2563EB, #3B82F6); border: none; border-radius: 8px; padding: 10px 24px; font-weight: 500;">
-                      <i class="bi bi-plus-lg"></i> Add Income
-                    </a>
-                  </div>
-                </td>
-              </tr>
-              {% endif %}
-
-            </tbody>
-          </table>
+                </div>
+                <div class="mt-3 text-sm text-muted" style="font-size: 0.875rem;">
+                    <span class="text-success fw-medium"><i class="bi bi-arrow-up-right"></i> 12.5%</span> vs last month
+                </div>
+            </div>
         </div>
-      </div>
+        
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="metric-title">Total Expenses</div>
+                        <div class="metric-value mt-2 text-danger">₹{{ "%.2f"|format(expense|default(0)) }}</div>
+                    </div>
+                    <div class="metric-icon icon-expense">
+                        <i class="bi bi-credit-card"></i>
+                    </div>
+                </div>
+                <div class="mt-3 text-sm text-muted" style="font-size: 0.875rem;">
+                    <span class="text-danger fw-medium"><i class="bi bi-arrow-up-right"></i> 4.2%</span> vs last month
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="metric-title">Savings</div>
+                        <div class="metric-value mt-2 text-info">₹{{ "%.2f"|format(savings|default(0)) }}</div>
+                    </div>
+                    <div class="metric-icon icon-savings">
+                        <i class="bi bi-piggy-bank"></i>
+                    </div>
+                </div>
+                <div class="mt-3 text-sm text-muted" style="font-size: 0.875rem;">
+                    <span class="text-info fw-medium"><i class="bi bi-graph-up"></i> Growing steadily</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="glass-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="metric-title">Budget Status</div>
+                        <div class="metric-value mt-2 text-warning">72%</div>
+                    </div>
+                    <div class="metric-icon icon-health">
+                        <i class="bi bi-pie-chart"></i>
+                    </div>
+                </div>
+                <div class="progress mt-3" style="height: 6px; border-radius: 10px; background-color: var(--border-color);">
+                    <div class="progress-bar bg-warning" role="progressbar" style="width: 72%" aria-valuenow="72" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="text-center mt-5 mb-2">
-      <small style="color:#94A3B8;font-size:12px;">FinanceAI © 2026 — Personal Finance Manager</small>
-    </footer>
+    <!-- Main Content Row -->
+    <div class="row g-4 mb-4">
+        
+        <!-- Left Column: Chart & Health -->
+        <div class="col-12 col-xl-8">
+            <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0 text-main">Expense Analytics</h5>
+                    <select class="form-select form-select-sm" style="width: auto;">
+                        <option>This Month</option>
+                        <option>Last Month</option>
+                        <option>This Year</option>
+                    </select>
+                </div>
+                <div style="height: 300px;">
+                    <canvas id="expenseBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column: AI Insights & Financial Health -->
+        <div class="col-12 col-xl-4 d-flex flex-column gap-4">
+            
+            <!-- AI Insights -->
+            <div class="glass-card p-4" style="background: linear-gradient(135deg, rgba(79,70,229,0.05) 0%, rgba(59,130,246,0.1) 100%); border: 1px solid rgba(79,70,229,0.2);">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-white p-2 rounded-circle shadow-sm me-3 d-flex align-items-center justify-content-center" style="color: var(--primary); width: 40px; height: 40px;">
+                        <i class="bi bi-robot fs-5"></i>
+                    </div>
+                    <h5 class="fw-bold mb-0 text-main">AI Insights</h5>
+                </div>
+                
+                <div class="d-flex flex-column gap-3 mt-3">
+                    <div class="d-flex p-3 rounded-3" style="background: var(--bg-card); box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+                        <div class="text-danger me-3 fs-5"><i class="bi bi-exclamation-circle-fill"></i></div>
+                        <div class="text-sm text-main" style="font-size: 0.9rem;">"Your food expenses increased by 12% this month."</div>
+                    </div>
+                    <div class="d-flex p-3 rounded-3" style="background: var(--bg-card); box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+                        <div class="text-success me-3 fs-5"><i class="bi bi-lightbulb-fill"></i></div>
+                        <div class="text-sm text-main" style="font-size: 0.9rem;">"Saving ₹5,000 more monthly can help achieve your goal 2 months earlier."</div>
+                    </div>
+                    <div class="d-flex p-3 rounded-3" style="background: var(--bg-card); box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+                        <div class="text-warning me-3 fs-5"><i class="bi bi-info-circle-fill"></i></div>
+                        <div class="text-sm text-main" style="font-size: 0.9rem;">"Entertainment expenses are above average."</div>
+                    </div>
+                </div>
+            </div>
 
-  </main>
+            <!-- Financial Health -->
+            <div class="glass-card p-4 text-center">
+                <h5 class="fw-bold mb-3 text-start text-main">Financial Health Score</h5>
+                <div class="position-relative d-inline-block my-3">
+                    <svg viewBox="0 0 36 36" style="width: 120px; height: 120px;">
+                        <path stroke="var(--border-color)" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke-width="3" />
+                        <path style="color: var(--success);" stroke-dasharray="{{ health_score|default(85) }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+                    </svg>
+                    <div class="position-absolute top-50 start-50 translate-middle text-center">
+                        <div class="fs-2 fw-bold text-success">{{ health_score|default(85) }}%</div>
+                    </div>
+                </div>
+                <p class="fw-medium text-success mb-0 mt-2">Excellent Financial Condition</p>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Bottom Row: Transactions & Goals -->
+    <div class="row g-4 mb-5">
+        <div class="col-12 col-xl-8">
+            <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0 text-main">Recent Activity</h5>
+                    <a href="{{ url_for('finance.income') }}" class="btn btn-sm rounded-pill px-3" style="border: 1px solid var(--border-color); color: var(--text-main);">View All</a>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-modern align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Transaction</th>
+                                <th>Category</th>
+                                <th>Date</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if recent_transactions and recent_transactions|length > 0 %}
+                                {% for tx in recent_transactions[:4] %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="{% if tx.type == 'income' %}bg-success text-success{% else %}bg-danger text-danger{% endif %} bg-opacity-10 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi {% if tx.type == 'income' %}bi-briefcase-fill{% else %}bi-cart-fill{% endif %}"></i>
+                                            </div>
+                                            <span class="fw-medium text-main">{{ tx.desc }}</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-soft {% if tx.type == 'income' %}badge-soft-success{% else %}badge-soft-danger{% endif %}">{% if tx.type == 'income' %}Income{% else %}Expense{% endif %}</span></td>
+                                    <td class="text-muted" style="font-size: 0.9rem;">{{ tx.date.strftime('%d %b, %Y') }}</td>
+                                    <td class="{% if tx.type == 'income' %}text-success{% else %}text-main{% endif %} fw-bold text-end">
+                                        {% if tx.type == 'income' %}+{% else %}-{% endif %}₹{{ "%.2f"|format(tx.amount) }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <!-- Demo Row for Income -->
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-briefcase-fill"></i>
+                                            </div>
+                                            <span class="fw-medium text-main">Salary Credited</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-soft badge-soft-success">Income</span></td>
+                                    <td class="text-muted" style="font-size: 0.9rem;">Today, 10:00 AM</td>
+                                    <td class="text-success fw-bold text-end">+₹50,000</td>
+                                </tr>
+                                
+                                <!-- Demo Row for Expense 1 -->
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-danger bg-opacity-10 text-danger rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-cup-hot-fill"></i>
+                                            </div>
+                                            <span class="fw-medium text-main">Food Expense</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-soft badge-soft-danger">Food</span></td>
+                                    <td class="text-muted" style="font-size: 0.9rem;">Yesterday, 8:30 PM</td>
+                                    <td class="text-main fw-bold text-end">-₹1,200</td>
+                                </tr>
+                                
+                                <!-- Demo Row for Expense 2 -->
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-lightning-charge-fill"></i>
+                                            </div>
+                                            <span class="fw-medium text-main">Electricity Bill</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-soft badge-soft-warning">Bills</span></td>
+                                    <td class="text-muted" style="font-size: 0.9rem;">12 Oct, 2026</td>
+                                    <td class="text-main fw-bold text-end">-₹800</td>
+                                </tr>
+                                
+                                <!-- Demo Row for Expense 3 -->
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-info bg-opacity-10 text-info rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-film"></i>
+                                            </div>
+                                            <span class="fw-medium text-main">Netflix Subscription</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge badge-soft badge-soft-info">Entertainment</span></td>
+                                    <td class="text-muted" style="font-size: 0.9rem;">10 Oct, 2026</td>
+                                    <td class="text-main fw-bold text-end">-₹499</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-xl-4">
+            <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0 text-main">Financial Goals</h5>
+                    <button class="btn btn-sm btn-link text-muted" style="text-decoration: none;"><i class="bi bi-three-dots"></i></button>
+                </div>
+                
+                <div class="d-flex flex-column gap-4 mt-2">
+                    <!-- Goal 1 -->
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                    <i class="bi bi-shield-fill-check"></i>
+                                </div>
+                                <span class="fw-medium text-main">Emergency Fund</span>
+                            </div>
+                            <span class="fw-bold text-main">80%</span>
+                        </div>
+                        <div class="progress" style="height: 8px; border-radius: 10px; background-color: var(--border-color);">
+                            <div class="progress-bar" style="width: 80%; background: var(--primary);" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Goal 2 -->
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-info bg-opacity-10 text-info rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                    <i class="bi bi-laptop-fill"></i>
+                                </div>
+                                <span class="fw-medium text-main">New Laptop</span>
+                            </div>
+                            <span class="fw-bold text-main">65%</span>
+                        </div>
+                        <div class="progress" style="height: 8px; border-radius: 10px; background-color: var(--border-color);">
+                            <div class="progress-bar bg-info" style="width: 65%;" role="progressbar" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Goal 3 -->
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                    <i class="bi bi-airplane-fill"></i>
+                                </div>
+                                <span class="fw-medium text-main">Europe Trip</span>
+                            </div>
+                            <span class="fw-bold text-main">40%</span>
+                        </div>
+                        <div class="progress" style="height: 8px; border-radius: 10px; background-color: var(--border-color);">
+                            <div class="progress-bar bg-warning" style="width: 40%;" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </div>
+{% endblock %}
 
-<!-- ========== SCRIPTS ========== -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
+{% block extra_js %}
 <script>
-// ---- Mobile Sidebar ----
-const hamburger = document.getElementById('hamburgerBtn');
-const sidebar   = document.getElementById('sidebar');
-const overlay   = document.getElementById('sidebarOverlay');
+    // Chart.js Theme Defaults
+    const getThemeColor = () => document.documentElement.getAttribute('data-theme') === 'dark' ? '#94a3b8' : '#64748b';
+    const getGridColor = () => document.documentElement.getAttribute('data-theme') === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
 
-hamburger.addEventListener('click', () => {
-  sidebar.classList.toggle('open');
-  overlay.classList.toggle('show');
-});
-overlay.addEventListener('click', () => {
-  sidebar.classList.remove('open');
-  overlay.classList.remove('show');
-});
+    Chart.defaults.color = getThemeColor();
+    Chart.defaults.font.family = "'Inter', sans-serif";
 
-// ---- AOS-style fade animations ----
-const aosCells = document.querySelectorAll('[data-aos]');
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      const delay = parseInt(e.target.dataset.aosDelay || 0);
-      setTimeout(() => e.target.classList.add('aos-animate'), delay);
-      observer.unobserve(e.target);
-    }
-  });
-}, { threshold: 0.1 });
-aosCells.forEach(el => observer.observe(el));
+    // 1. Monthly Expense Bar Chart
+    const barCtx = document.getElementById('expenseBarChart').getContext('2d');
+    
+    // Gradient for Bars
+    const gradient1 = barCtx.createLinearGradient(0, 0, 0, 400);
+    gradient1.addColorStop(0, 'rgba(79, 70, 229, 0.8)');
+    gradient1.addColorStop(1, 'rgba(79, 70, 229, 0.2)');
 
-// ---- Chart.js — Income vs Expense Bar Chart ----
-const ctx1 = document.getElementById('incomeExpenseChart').getContext('2d');
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-const incomeData  = [42000, 45000, 43000, 47000, 46000, {{ income }}];
-const expenseData = [28000, 31000, 29000, 33000, 30000, {{ expense }}];
-
-new Chart(ctx1, {
-  type: 'bar',
-  data: {
-    labels: months,
-    datasets: [
-      {
-        label: 'Income',
-        data: incomeData,
-        backgroundColor: 'rgba(34,197,94,0.85)',
-        borderRadius: 6,
-        borderSkipped: false,
-        barPercentage: 0.45,
-      },
-      {
-        label: 'Expenses',
-        data: expenseData,
-        backgroundColor: 'rgba(239,68,68,0.8)',
-        borderRadius: 6,
-        borderSkipped: false,
-        barPercentage: 0.45,
-      }
-    ]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: true,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: '#0F172A',
-        titleColor: '#fff',
-        bodyColor: 'rgba(255,255,255,0.7)',
-        borderColor: 'rgba(255,255,255,0.08)',
-        borderWidth: 1,
-        padding: 12,
-        cornerRadius: 10,
-        callbacks: {
-          label: ctx => ' ₹' + ctx.parsed.y.toLocaleString('en-IN')
-        }
-      }
-    },
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: { color: '#94A3B8', font: { family: 'Inter', size: 12 } },
-        border: { display: false }
-      },
-      y: {
-        grid: { color: 'rgba(226,232,240,0.5)', drawBorder: false },
-        ticks: {
-          color: '#94A3B8',
-          font: { family: 'Inter', size: 11 },
-          callback: v => '₹' + (v/1000).toFixed(0) + 'k'
+    const barChart = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Food', 'Travel', 'Shopping', 'Bills', 'Entertainment'],
+            datasets: [{
+                label: 'Expenses',
+                data: [1200, 800, 1500, 2200, 900],
+                backgroundColor: gradient1,
+                borderRadius: 8,
+                borderWidth: 0,
+                barThickness: 30
+            }]
         },
-        border: { display: false }
-      }
-    }
-  }
-});
-
-// ---- Chart.js — Expense Pie Chart ----
-const ctx2 = document.getElementById('expensePieChart').getContext('2d');
-new Chart(ctx2, {
-  type: 'doughnut',
-  data: {
-    labels: ['Food', 'Housing', 'Transport', 'Health', 'Others'],
-    datasets: [{
-      data: [28, 35, 14, 12, 11],
-      backgroundColor: ['#2563EB','#22C55E','#F59E0B','#EF4444','#8B5CF6'],
-      borderWidth: 0,
-      hoverOffset: 8,
-    }]
-  },
-  options: {
-    responsive: true,
-    cutout: '68%',
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          color: '#64748B',
-          font: { family: 'Inter', size: 11.5 },
-          padding: 12,
-          usePointStyle: true,
-          pointStyleWidth: 8,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: getGridColor() },
+                    border: { display: false }
+                },
+                x: {
+                    grid: { display: false },
+                    border: { display: false }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    padding: 12,
+                    cornerRadius: 8,
+                    displayColors: false
+                }
+            },
+            animation: {
+                y: { duration: 2000, easing: 'easeOutQuart' }
+            }
         }
-      },
-      tooltip: {
-        backgroundColor: '#0F172A',
-        titleColor: '#fff',
-        bodyColor: 'rgba(255,255,255,0.7)',
-        borderColor: 'rgba(255,255,255,0.08)',
-        borderWidth: 1,
-        padding: 12,
-        cornerRadius: 10,
-        callbacks: {
-          label: ctx => ' ' + ctx.label + ': ' + ctx.parsed + '%'
-        }
-      }
-    }
-  }
-});
+    });
 
-// ---- Health score animate ----
-window.addEventListener('load', () => {
-  const fill = document.getElementById('healthFill');
-  if (fill) {
-    const score = parseInt("{{ health_score }}");
-    const dashOffset = 251.2 - (251.2 * score / 100);
-    fill.style.strokeDashoffset = dashOffset;
-  }
-});
+    // Observe theme changes to update chart colors dynamically
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.attributeName === "data-theme") {
+                Chart.defaults.color = getThemeColor();
+                barChart.options.scales.y.grid.color = getGridColor();
+                barChart.update();
+            }
+        });
+    });
+    observer.observe(document.documentElement, { attributes: true });
+
 </script>
-
-</body>
-</html>
+{% endblock %}

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinanceAI - AI Personal Finance Assistant</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- FontAwesome (Fallback) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Sidebar -->
+    {% if current_user.is_authenticated %}
+    <nav class="sidebar">
+        <div class="sidebar-brand">
+            <i class="bi bi-robot"></i> FinanceAI
+        </div>
+        <span class="sidebar-subtitle">AI Personal Finance Assistant</span>
+        
+        <div class="nav flex-column flex-grow-1">
+            <a href="{{ url_for('dashboard.home') }}" class="nav-link {% if request.endpoint == 'dashboard.home' %}active{% endif %}">
+                <i class="bi bi-house-door-fill"></i> Dashboard
+            </a>
+            <a href="{{ url_for('finance.income') }}" class="nav-link {% if request.endpoint == 'finance.income' %}active{% endif %}">
+                <i class="bi bi-cash-stack"></i> Income
+            </a>
+            <a href="{{ url_for('finance.expense') }}" class="nav-link {% if request.endpoint == 'finance.expense' %}active{% endif %}">
+                <i class="bi bi-credit-card-fill"></i> Expenses
+            </a>
+            <a href="{{ url_for('finance.budget') }}" class="nav-link {% if request.endpoint == 'finance.budget' %}active{% endif %}">
+                <i class="bi bi-pie-chart-fill"></i> Budgets
+            </a>
+            <a href="{{ url_for('finance.goal') if 'goal' in url_for.__code__.co_varnames else '#' }}" class="nav-link {% if request.endpoint == 'finance.goal' %}active{% endif %}">
+                <i class="bi bi-bullseye"></i> Goals
+            </a>
+            <a href="{{ url_for('finance.report') }}" class="nav-link {% if request.endpoint == 'finance.report' %}active{% endif %}">
+                <i class="bi bi-graph-up"></i> Reports
+            </a>
+            <a href="{{ url_for('auth.profile') }}" class="nav-link {% if request.endpoint == 'auth.profile' %}active{% endif %}">
+                <i class="bi bi-person-fill"></i> Profile
+            </a>
+            <a href="{{ url_for('dashboard.settings') }}" class="nav-link {% if request.endpoint == 'dashboard.settings' %}active{% endif %}">
+                <i class="bi bi-gear-fill"></i> Settings
+            </a>
+            <a href="{{ url_for('auth.logout') }}" class="nav-link text-danger mt-3">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </div>
+        
+        <div class="sidebar-user">
+            <img src="https://ui-avatars.com/api/?name={{ current_user.name }}&background=6366f1&color=fff" alt="User Avatar">
+            <div>
+                <div class="fw-bold" style="font-size: 0.875rem;">{{ current_user.name }}</div>
+                <div class="text-muted" style="font-size: 0.75rem;">Free Plan</div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Main Content Wrapper -->
+    <main class="main-content {% if not current_user.is_authenticated %}ms-0{% endif %}">
+        
+        {% if current_user.is_authenticated %}
+        <!-- Top Navigation Bar -->
+        <header class="top-nav glass-card mb-4 rounded-pill py-2 px-4 animate-fade-in">
+            <div class="d-flex align-items-center">
+                <h5 class="mb-0 text-main fw-bold d-none d-md-block">Overview / Dashboard</h5>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <!-- Search Bar -->
+                <div class="input-group d-none d-md-flex" style="width: 250px;">
+                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Search transactions...">
+                </div>
+                
+                <!-- Dark Mode Toggle -->
+                <button id="themeToggle" class="theme-toggle" aria-label="Toggle Dark Mode">
+                    <i class="bi bi-moon-stars-fill"></i>
+                </button>
+                
+                <!-- Notification Bell -->
+                <div class="position-relative" style="cursor: pointer;">
+                    <i class="bi bi-bell-fill fs-5 text-muted"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                        <span class="visually-hidden">New alerts</span>
+                    </span>
+                </div>
+                
+                <!-- User Profile Dropdown -->
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="https://ui-avatars.com/api/?name={{ current_user.name }}&background=6366f1&color=fff" alt="mdo" width="32" height="32" class="rounded-circle me-2">
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="dropdownUser1">
+                        <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">Profile</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('dashboard.settings') }}">Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">Sign out</a></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+        {% endif %}
+
+        <!-- Flash Messages -->
+        <div class="container-fluid mb-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show glass-card border-0 animate-fade-in" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        {% block content %}{% endblock %}
+        
+        <!-- Footer -->
+        <footer class="footer animate-fade-in">
+            <div class="container">
+                <div class="fw-bold mb-1">FinanceAI &copy; 2026</div>
+                <div class="text-muted mb-1">AI Powered Personal Finance Management System</div>
+                <div class="text-muted" style="font-size: 0.75rem;">Made with Flask + Bootstrap + Chart.js</div>
+            </div>
+        </footer>
+        
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.css"></script>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- html2pdf.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- Theme Toggle Script -->
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateToggleIcon(savedTheme);
+
+        if(themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = html.getAttribute('data-theme');
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                
+                html.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateToggleIcon(newTheme);
+            });
+        }
+
+        function updateToggleIcon(theme) {
+            if(themeToggle) {
+                if(theme === 'dark') {
+                    themeToggle.innerHTML = '<i class="bi bi-sun-fill"></i>';
+                } else {
+                    themeToggle.innerHTML = '<i class="bi bi-moon-stars-fill"></i>';
+                }
+            }
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
